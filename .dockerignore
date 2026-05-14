@@ -1,0 +1,16 @@
+node_modules
+npm-debug.log
+.env
+.env.local
+.git
+.gitignore
+.claude
+.vscode
+.idea
+*.md
+README*
+app.http
+Dockerfile
+.dockerignore
+docker-compose.yml
+cache-lote.json
