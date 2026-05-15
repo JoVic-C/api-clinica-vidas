@@ -173,6 +173,34 @@ app.get("/appointments", async (req, res) => {
   }
 });
 
+/**
+ * GET /suppliers?date=YYYY-MM-DD
+ * Lista os médicos com agendamentos no dia (com totais por status).
+ * Útil para descobrir qual supplierId usar no lote por médico.
+ */
+app.get("/suppliers", async (req, res) => {
+  const date = req.query.date || todayISO();
+  try {
+    const agendamentos = await listarAgendamentosPaginado({ date });
+    const map = new Map();
+    for (const a of agendamentos) {
+      const key = a.supplier_id;
+      if (!map.has(key)) {
+        map.set(key, { supplierId: a.supplier_id, supplierName: a.supplier_name, total: 0, agendado: 0, confirmado: 0, cancelado: 0 });
+      }
+      const s = map.get(key);
+      s.total += 1;
+      if (a.status === "Agendado") s.agendado += 1;
+      else if (a.status === "Confirmado") s.confirmado += 1;
+      else if (a.status === "Cancelado") s.cancelado += 1;
+    }
+    const suppliers = [...map.values()].sort((a, b) => b.total - a.total);
+    return res.json({ sucesso: true, date, total: suppliers.length, suppliers });
+  } catch (error) {
+    return handleError(error, res);
+  }
+});
+
 app.get("/appointments/by-phone", async (req, res) => {
   const { phone, patientId, cpf } = req.query;
   if (!phone) return res.status(400).json({ sucesso: false, mensagem: "Query 'phone' é obrigatória." });
@@ -287,6 +315,7 @@ app.post("/agendamento/enviar-confirmacoes", async (req, res) => {
     const resultado = await executarLote(LOTE_CONFIRMACAO, {
       date: req.body?.DataAgendamento,
       diasAntes: req.body?.diasAntes,
+      supplierId: req.body?.supplierId,
     });
     return res.json(resultado);
   } catch (error) {
@@ -299,6 +328,7 @@ app.post("/agendamento/enviar-lembretes", async (req, res) => {
     const resultado = await executarLote(LOTE_LEMBRETE, {
       date: req.body?.DataAgendamento,
       diasAntes: req.body?.diasAntes,
+      supplierId: req.body?.supplierId,
     });
     return res.json(resultado);
   } catch (error) {

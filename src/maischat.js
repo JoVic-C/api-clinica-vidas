@@ -5,7 +5,10 @@ async function enviarMaisChat(body) {
   return axios.post(
     `${maischat.baseUrl}/template/send/${maischat.broker}`,
     body,
-    { headers: { "Content-Type": "application/json", authorization: `Bearer ${maischat.token}` } }
+    {
+      timeout: maischat.timeoutMs,
+      headers: { "Content-Type": "application/json", authorization: `Bearer ${maischat.token}` },
+    }
   );
 }
 

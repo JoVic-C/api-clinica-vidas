@@ -23,13 +23,19 @@ const LOTE_LEMBRETE = {
   incluirDescricao: false,
 };
 
-async function executarLote(config, { date, diasAntes } = {}) {
+async function executarLote(config, { date, diasAntes, supplierId } = {}) {
   const diasUsados = diasAntes !== undefined ? Number(diasAntes) : config.diasPadrao;
   const dataAlvo = date
     ? normalizarDataYMD(date) || String(date).slice(0, 10)
     : dataRelativaISO(diasUsados);
 
-  const agendamentos = await listarAgendamentosPaginado({ date: dataAlvo });
+  let agendamentos = await listarAgendamentosPaginado({ date: dataAlvo });
+  let supplierName = null;
+  if (supplierId !== undefined && supplierId !== null && supplierId !== "") {
+    const supId = String(supplierId);
+    agendamentos = agendamentos.filter((a) => String(a.supplier_id) === supId);
+    supplierName = agendamentos[0]?.supplier_name || null;
+  }
   const doStatus = agendamentos.filter((a) => a.status === config.status);
   const semTelefone = doStatus.filter((a) => !a.patient_phone);
   const elegiveis = doStatus.filter(
@@ -73,6 +79,8 @@ async function executarLote(config, { date, diasAntes } = {}) {
     tipo: config.tipo,
     template: config.template(),
     date: dataAlvo,
+    supplierId: supplierId ?? null,
+    supplierName,
     total: agendamentos.length,
     totalElegiveis: elegiveis.length,
     totalJaProcessados: jaProcessados,

@@ -1,0 +1,12 @@
+{
+  "watch": ["index.js", "config.js", "src"],
+  "ext": "js,json",
+  "ignore": [
+    "cache-lote.json",
+    "node_modules",
+    ".env",
+    ".env.local",
+    "*.log"
+  ],
+  "delay": 500
+}

@@ -10,11 +10,13 @@ module.exports = {
   mdmed: {
     baseUrl: process.env.MDMED_BASE_URL,
     token: process.env.MDMED_TOKEN,
+    timeoutMs: num(process.env.MDMED_TIMEOUT_MS, 30000),
   },
 
   maischat: {
     baseUrl: process.env.MAISCHAT_BASE_URL,
     token: process.env.MAISCHAT_TOKEN,
+    timeoutMs: num(process.env.MAISCHAT_TIMEOUT_MS, 30000),
     broker: process.env.MAISCHAT_BROKER || "wppCloudAPI",
     appId: process.env.MAISCHAT_APP_ID,
     source: process.env.MAISCHAT_SOURCE,

@@ -1,5 +1,6 @@
 const axios = require("axios");
 const { mdmed: mdmedConfig, dias } = require("../config");
+const { codesNoCache } = require("./cache");
 const {
   variantesTelefoneMdmed,
   formatarDataBR,
@@ -12,12 +13,14 @@ const {
 async function mdmedGet(path, params) {
   return axios.get(`${mdmedConfig.baseUrl}${path}`, {
     params,
+    timeout: mdmedConfig.timeoutMs,
     headers: { Authorization: `Bearer ${mdmedConfig.token}`, Accept: "application/json" },
   });
 }
 
 async function mdmedPut(path, body) {
   return axios.put(`${mdmedConfig.baseUrl}${path}`, body, {
+    timeout: mdmedConfig.timeoutMs,
     headers: {
       Authorization: `Bearer ${mdmedConfig.token}`,
       Accept: "application/json",
@@ -161,8 +164,11 @@ async function resolverPaciente({ phone, patientId, cpf }) {
  * Resolve o paciente quando o telefone tem múltiplos cadastros (família).
  *  - Se patientId/cpf vier, usa a desambiguação tradicional.
  *  - Se DataAgendamento (dataYMD) vier, filtra agendamentos por essa data.
- *  - Sem nenhum dos dois, usa a janela dias.autoDesambiguacao à frente
- *    (heurística: confirmação foi enviada ~5 dias antes da consulta).
+ *  - Sem nenhum dos dois:
+ *      1ª tentativa: cruza agendamentos da família com cache-lote.json
+ *                    (templates já enviados — desambiguação 100% precisa)
+ *      2ª tentativa: usa a janela dias.autoDesambiguacao à frente
+ *                    (heurística: confirmação foi enviada ~5 dias antes da consulta)
  */
 async function resolverPacienteComData({ phone, patientId, cpf, dataYMD }) {
   const pacientes = await buscarPacientesPorTelefone(phone);
@@ -171,10 +177,16 @@ async function resolverPacienteComData({ phone, patientId, cpf, dataYMD }) {
   if (escolhaInicial.ok) return escolhaInicial;
   if (escolhaInicial.motivo !== "telefone_duplicado") return escolhaInicial;
 
+  const codesEnviados = !dataYMD ? codesNoCache(["confirmacao", "lembrete"]) : null;
+
   const filtrarAlvo = (ags) => {
     if (dataYMD) {
       return ags.filter((a) => String(a.start_datetime).startsWith(dataYMD));
     }
+    // Estratégia 1: cruzar com cache de envios (preciso)
+    const noCache = ags.filter((a) => codesEnviados.has(a.code));
+    if (noCache.length > 0) return noCache;
+    // Estratégia 2 (fallback): janela à frente
     const agora = new Date();
     const fim = new Date(agora);
     fim.setDate(fim.getDate() + dias.autoDesambiguacao);
@@ -184,7 +196,9 @@ async function resolverPacienteComData({ phone, patientId, cpf, dataYMD }) {
       .map((x) => x.a);
   };
 
-  const criterio = dataYMD ? `data ${dataYMD}` : `próximos ${dias.autoDesambiguacao} dias`;
+  const criterio = dataYMD
+    ? `data ${dataYMD}`
+    : `cache-de-envios + janela ${dias.autoDesambiguacao} dias (fallback)`;
   console.log(`  resolverPacienteComData: ${pacientes.length} pacientes, filtrando por ${criterio}`);
 
   const candidatos = [];
