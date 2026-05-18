@@ -5,8 +5,6 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "docker:build": "docker build -t api-clinica-vidas:latest .",
-    "docker:run": "docker run --rm -p 3000:3000 --env-file .env -v cache-data:/app/data -e CACHE_LOTE_PATH=/app/data/cache-lote.json api-clinica-vidas:latest",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
