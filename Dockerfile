@@ -1,26 +1,17 @@
-# syntax=docker/dockerfile:1
-FROM node:22-alpine
+FROM node:22
 
+# Set the working directory inside the container
 WORKDIR /app
 
-# Instala só dependências de produção
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+# Copy package.json
+COPY package.json ./
 
-# Copia código (cache-lote.json e .env são excluídos via .dockerignore)
-COPY config.js index.js ./
-COPY src ./src
+# Install dependencies
+RUN npm install
 
-# Cria diretório de dados persistente e ajusta owner pro user "node"
-RUN mkdir -p /app/data && chown -R node:node /app
+# Copy the rest of the application files
+COPY ./ ./
 
-USER node
-
-ENV NODE_ENV=production
-ENV PORT=5000
 EXPOSE 5000
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget --quiet --tries=1 --spider http://localhost:3000/health || exit 1
-
-CMD ["node", "index.js"]
+CMD ["npm", "start"]
