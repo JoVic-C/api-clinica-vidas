@@ -3,3 +3,7 @@ node_modules/
 dist
 app.http
 .claude
+
+# Runtime (gerado pelo servidor — não vai pro git)
+cache-lote.json
+*.log

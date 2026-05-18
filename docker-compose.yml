@@ -1,7 +1,7 @@
 services:
   api:
     build: .
-    image: api-clinica-vidas:latest
+    image: gitapi-clinica-vidas:latest
     container_name: api-clinica-vidas
     restart: unless-stopped
     ports:
