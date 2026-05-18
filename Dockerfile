@@ -1,16 +1,17 @@
-FROM node:22-alpine
+FROM node:22
 
+# Set the working directory inside the container
 WORKDIR /app
 
-ENV NODE_ENV=production
+# Copy package.json
+COPY package.json ./
 
-COPY package*.json ./
-RUN npm ci --omit=dev
+# Install dependencies
+RUN npm install
 
-COPY --chown=node:node ./ ./
-
-USER node
+# Copy the rest of the application files
+COPY ./ ./
 
 EXPOSE 3002
 
-CMD ["node", "index.js"]
+CMD ["npm", "start"]
