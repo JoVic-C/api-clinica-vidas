@@ -270,8 +270,6 @@ app.post("/agendamento/enviar-confirmacao", async (req, res) => {
   const { data, horario } = formatarDataBR(ag.start_datetime);
   const templateUsado = template || maischat.templateConfirmacao;
 
-  await criarContato({ nome: ag.patient_name || paciente.name, celular: destination });
-
   try {
     const payload = montarPayloadTemplate({
       template: templateUsado,
@@ -293,6 +291,7 @@ app.post("/agendamento/enviar-confirmacao", async (req, res) => {
         agendamento: { code: ag.code, start_datetime: ag.start_datetime, data, horario },
       });
     }
+    await criarContato({ nome: ag.patient_name || paciente.name, celular: destination });
     return res.json({
       sucesso: true,
       mensagem: "Template enviado.",

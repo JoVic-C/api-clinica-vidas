@@ -51,9 +51,6 @@ async function executarLote(config, { date, diasAntes, supplierId } = {}) {
   for (const ag of elegiveis) {
     const { data, horario } = formatarDataBR(ag.start_datetime);
     const destination = formatarCelular(ag.patient_phone);
-    if (config.tipo === "confirmacao") {
-      await criarContato({ nome: ag.patient_name, celular: destination });
-    }
     try {
       const payload = montarPayloadTemplate({
         template: config.template(),
@@ -69,6 +66,9 @@ async function executarLote(config, { date, diasAntes, supplierId } = {}) {
       if (ok) {
         enviados.push({ code: ag.code, destination, data, horario, msgId: response?.data?.data?.msgId });
         marcarEnviadoNoLote(config.tipo, dataAlvo, ag.code);
+        if (config.tipo === "confirmacao") {
+          await criarContato({ nome: ag.patient_name, celular: destination });
+        }
       } else {
         falhas.push({ code: ag.code, motivo: response?.data?.message || "Falha desconhecida" });
       }
