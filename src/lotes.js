@@ -1,6 +1,6 @@
 const { maischat, dias } = require("../config");
 const { listarAgendamentosPaginado } = require("./mdmed");
-const { enviarMaisChat, montarPayloadTemplate } = require("./maischat");
+const { enviarMaisChat, montarPayloadTemplate, criarContato } = require("./maischat");
 const { jaEnviadoNoLote, marcarEnviadoNoLote } = require("./cache");
 const { formatarDataBR, formatarCelular, normalizarDataYMD, dataRelativaISO } = require("./utils");
 
@@ -51,6 +51,9 @@ async function executarLote(config, { date, diasAntes, supplierId } = {}) {
   for (const ag of elegiveis) {
     const { data, horario } = formatarDataBR(ag.start_datetime);
     const destination = formatarCelular(ag.patient_phone);
+    if (config.tipo === "confirmacao") {
+      await criarContato({ nome: ag.patient_name, celular: destination });
+    }
     try {
       const payload = montarPayloadTemplate({
         template: config.template(),

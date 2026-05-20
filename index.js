@@ -21,6 +21,7 @@ const {
   enviarMaisChat,
   montarPayloadTemplate,
   templateIncluiDescricao,
+  criarContato,
 } = require("./src/maischat");
 const {
   LOTE_CONFIRMACAO,
@@ -268,6 +269,8 @@ app.post("/agendamento/enviar-confirmacao", async (req, res) => {
   const destination = formatarCelular(NumeroCelular);
   const { data, horario } = formatarDataBR(ag.start_datetime);
   const templateUsado = template || maischat.templateConfirmacao;
+
+  await criarContato({ nome: ag.patient_name || paciente.name, celular: destination });
 
   try {
     const payload = montarPayloadTemplate({

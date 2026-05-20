@@ -46,8 +46,28 @@ function templateIncluiDescricao(template) {
   return template !== maischat.templateLembrete;
 }
 
+// Best-effort: 409 (duplicado) é tratado como sucesso lógico (já existe).
+async function criarContato({ nome, celular }) {
+  if (!nome || !celular) return { criado: false, motivo: "nome ou celular ausentes" };
+  try {
+    const resp = await axios.post(
+      `${maischat.baseUrl}/contact`,
+      { name: nome, type: "pf", celular },
+      {
+        timeout: maischat.timeoutMs,
+        headers: { "Content-Type": "application/json", authorization: `Bearer ${maischat.token}` },
+      },
+    );
+    return { criado: true, contato: resp?.data?.data };
+  } catch (err) {
+    if (err.response?.status === 409) return { criado: false, jaExiste: true };
+    return { criado: false, motivo: err.response?.data?.message || err.message };
+  }
+}
+
 module.exports = {
   enviarMaisChat,
   montarPayloadTemplate,
   templateIncluiDescricao,
+  criarContato,
 };
