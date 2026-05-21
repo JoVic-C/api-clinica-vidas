@@ -312,6 +312,62 @@ app.post("/agendamento/enviar-confirmacao", async (req, res) => {
   }
 });
 
+app.post("/contatos/sincronizar", async (req, res) => {
+  const date = req.body?.date || req.query?.date || todayISO();
+  const supplierId = req.body?.supplierId ?? req.query?.supplierId;
+  try {
+    let agendamentos = await listarAgendamentosPaginado({ date });
+    if (supplierId !== undefined && supplierId !== null && supplierId !== "") {
+      const supId = String(supplierId);
+      agendamentos = agendamentos.filter((a) => String(a.supplier_id) === supId);
+    }
+
+    const vistos = new Set();
+    const criados = [];
+    const atualizados = [];
+    const jaExistiam = [];
+    const falhas = [];
+    const semDados = [];
+
+    for (const a of agendamentos) {
+      if (!a.patient_phone || !a.patient_name) {
+        semDados.push({ code: a.code, patient_name: a.patient_name || null, patient_phone: a.patient_phone || null });
+        continue;
+      }
+      const destination = formatarCelular(a.patient_phone);
+      const chave = `${destination}|${a.patient_name}`;
+      if (vistos.has(chave)) continue;
+      vistos.add(chave);
+
+      const r = await criarContato({ nome: a.patient_name, celular: destination });
+      if (r.criado) criados.push({ nome: a.patient_name, celular: destination });
+      else if (r.atualizado) atualizados.push({ nome: a.patient_name, celular: destination });
+      else if (r.jaExiste) jaExistiam.push({ nome: a.patient_name, celular: destination, motivo: r.motivo });
+      else falhas.push({ nome: a.patient_name, celular: destination, motivo: r.motivo });
+    }
+
+    return res.json({
+      sucesso: true,
+      date,
+      supplierId: supplierId ?? null,
+      total: agendamentos.length,
+      totalUnicos: vistos.size,
+      totalCriados: criados.length,
+      totalAtualizados: atualizados.length,
+      totalJaExistiam: jaExistiam.length,
+      totalFalhas: falhas.length,
+      totalSemDados: semDados.length,
+      criados,
+      atualizados,
+      jaExistiam,
+      falhas,
+      semDados,
+    });
+  } catch (error) {
+    return handleError(error, res);
+  }
+});
+
 app.post("/agendamento/enviar-confirmacoes", async (req, res) => {
   try {
     const resultado = await executarLote(LOTE_CONFIRMACAO, {

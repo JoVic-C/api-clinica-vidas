@@ -64,16 +64,41 @@ async function executarLote(config, { date, diasAntes, supplierId } = {}) {
       const response = await enviarMaisChat(payload);
       const ok = response?.data?.status !== false;
       if (ok) {
-        enviados.push({ code: ag.code, destination, data, horario, msgId: response?.data?.data?.msgId });
+        enviados.push({
+          code: ag.code,
+          destination,
+          data,
+          horario,
+          msgId: response?.data?.data?.msgId,
+          patient_name: ag.patient_name,
+        });
         marcarEnviadoNoLote(config.tipo, dataAlvo, ag.code);
-        if (config.tipo === "confirmacao") {
-          await criarContato({ nome: ag.patient_name, celular: destination });
-        }
       } else {
         falhas.push({ code: ag.code, motivo: response?.data?.message || "Falha desconhecida" });
       }
     } catch (err) {
       falhas.push({ code: ag.code, motivo: err.response?.data?.message || err.message });
+    }
+  }
+
+  // Sincroniza contatos na MaisChat só para confirmação (lembrete já tem o contato).
+  const contatos = { criados: 0, atualizados: 0, jaExistiam: 0, falhas: 0, detalhes: [] };
+  if (config.tipo === "confirmacao" && enviados.length > 0) {
+    const vistos = new Set();
+    for (const e of enviados) {
+      if (!e.patient_name) continue;
+      const chave = `${e.destination}|${e.patient_name}`;
+      if (vistos.has(chave)) continue;
+      vistos.add(chave);
+
+      const r = await criarContato({ nome: e.patient_name, celular: e.destination });
+      if (r.criado) contatos.criados += 1;
+      else if (r.atualizado) contatos.atualizados += 1;
+      else if (r.jaExiste) contatos.jaExistiam += 1;
+      else {
+        contatos.falhas += 1;
+        contatos.detalhes.push({ nome: e.patient_name, celular: e.destination, motivo: r.motivo });
+      }
     }
   }
 
@@ -93,6 +118,7 @@ async function executarLote(config, { date, diasAntes, supplierId } = {}) {
     enviados,
     falhas,
     semTelefone: semTelefone.map((a) => ({ code: a.code, patient_name: a.patient_name })),
+    contatos,
   };
 }
 
