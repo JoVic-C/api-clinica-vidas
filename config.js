@@ -22,14 +22,12 @@ module.exports = {
     source: process.env.MAISCHAT_SOURCE,
     metaToken: process.env.MAISCHAT_META_TOKEN,
     templateConfirmacao: process.env.MAISCHAT_TEMPLATE_NAME || "confirma_agendamento",
-    templateLembrete: process.env.MAISCHAT_TEMPLATE_LEMBRETE || "lembrete",
     templateLang: process.env.MAISCHAT_TEMPLATE_LANGUAGE || "pt_BR",
     defaultCountryCode: process.env.MAISCHAT_DEFAULT_COUNTRY_CODE || "55",
   },
 
   dias: {
     confirmacao: num(process.env.DIAS_CONFIRMACAO, 5),
-    lembrete: num(process.env.DIAS_LEMBRETE, 3),
     janelaResposta: num(process.env.DIAS_JANELA_RESPOSTA, 30),
     autoDesambiguacao: num(process.env.DIAS_AUTO_DESAMBIGUACAO, 7),
     toleranciaEscolha: num(process.env.DIAS_TOLERANCIA_ESCOLHA, 2),
@@ -38,8 +36,6 @@ module.exports = {
   cron: {
     loteExpr: process.env.CRON_LOTE_EXPR || "0 8 * * *",
     loteAtivo: bool(process.env.CRON_LOTE_ATIVO, true),
-    lembreteExpr: process.env.CRON_LEMBRETE_EXPR || "0 8 * * *",
-    lembreteAtivo: bool(process.env.CRON_LEMBRETE_ATIVO, true),
   },
 
   cache: {

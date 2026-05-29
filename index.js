@@ -20,12 +20,10 @@ const {
 const {
   enviarMaisChat,
   montarPayloadTemplate,
-  templateIncluiDescricao,
   criarContato,
 } = require("./src/maischat");
 const {
   LOTE_CONFIRMACAO,
-  LOTE_LEMBRETE,
   executarLote,
 } = require("./src/lotes");
 
@@ -278,7 +276,6 @@ app.post("/agendamento/enviar-confirmacao", async (req, res) => {
       descricao: ag.description,
       data,
       horario,
-      incluirDescricao: templateIncluiDescricao(templateUsado),
     });
     const response = await enviarMaisChat(payload);
     const ok = response?.data?.status !== false;
@@ -381,19 +378,6 @@ app.post("/agendamento/enviar-confirmacoes", async (req, res) => {
   }
 });
 
-app.post("/agendamento/enviar-lembretes", async (req, res) => {
-  try {
-    const resultado = await executarLote(LOTE_LEMBRETE, {
-      date: req.body?.DataAgendamento,
-      diasAntes: req.body?.diasAntes,
-      supplierId: req.body?.supplierId,
-    });
-    return res.json(resultado);
-  } catch (error) {
-    return handleError(error, res);
-  }
-});
-
 app.post("/agendamento/confirmar-mais-recente", async (req, res) =>
   mudarStatusEndpoint({ req, res, novoStatus: "Confirmado" }));
 
@@ -416,7 +400,6 @@ app.post("/test/whatsapp", async (req, res) => {
       descricao: req.body?.descricao || "CONSULTA TESTE - PARTICULAR R$ 0,00",
       data,
       horario,
-      incluirDescricao: templateIncluiDescricao(templateTeste),
     });
     console.log("Payload:", JSON.stringify(payload, null, 2));
     const response = await enviarMaisChat(payload);
@@ -463,13 +446,6 @@ if (cronCfg.loteAtivo) {
   console.log(`[Cron] Confirmação ATIVA: "${cronCfg.loteExpr}" (TZ ${TIMEZONE}, ${dias.confirmacao} dias antes, status=Agendado, template=${maischat.templateConfirmacao})`);
 } else {
   console.log("[Cron] Confirmação DESATIVADA (CRON_LOTE_ATIVO=false)");
-}
-
-if (cronCfg.lembreteAtivo) {
-  agendarCronLote({ nome: "lembrete", expr: cronCfg.lembreteExpr, config: LOTE_LEMBRETE });
-  console.log(`[Cron] Lembrete ATIVO: "${cronCfg.lembreteExpr}" (TZ ${TIMEZONE}, ${dias.lembrete} dias antes, status=Confirmado, template=${maischat.templateLembrete})`);
-} else {
-  console.log("[Cron] Lembrete DESATIVADO (CRON_LEMBRETE_ATIVO=false)");
 }
 
 app.listen(PORT, () => console.log(`Servidor rodando em http://localhost:${PORT}`));

@@ -177,7 +177,7 @@ async function resolverPacienteComData({ phone, patientId, cpf, dataYMD }) {
   if (escolhaInicial.ok) return escolhaInicial;
   if (escolhaInicial.motivo !== "telefone_duplicado") return escolhaInicial;
 
-  const codesEnviados = !dataYMD ? codesNoCache(["confirmacao", "lembrete"]) : null;
+  const codesEnviados = !dataYMD ? codesNoCache(["confirmacao"]) : null;
 
   const filtrarAlvo = (ags) => {
     if (dataYMD) {

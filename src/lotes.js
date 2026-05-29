@@ -4,23 +4,12 @@ const { enviarMaisChat, montarPayloadTemplate, criarContato } = require("./maisc
 const { jaEnviadoNoLote, marcarEnviadoNoLote } = require("./cache");
 const { formatarDataBR, formatarCelular, normalizarDataYMD, dataRelativaISO } = require("./utils");
 
-// Confirmação: enviado N dias antes para agendamentos "Agendado"
-//   (paciente ainda não confirmou — pedimos confirmação).
-// Lembrete:    enviado M dias antes para agendamentos "Confirmado"
-//   (paciente já confirmou — só lembramos da consulta).
+// Confirmação: enviado N dias antes para agendamentos "Agendado".
 const LOTE_CONFIRMACAO = {
   tipo: "confirmacao",
   template: () => maischat.templateConfirmacao,
   status: "Agendado",
   diasPadrao: dias.confirmacao,
-  incluirDescricao: true,
-};
-const LOTE_LEMBRETE = {
-  tipo: "lembrete",
-  template: () => maischat.templateLembrete,
-  status: "Confirmado",
-  diasPadrao: dias.lembrete,
-  incluirDescricao: false,
 };
 
 async function executarLote(config, { date, diasAntes, supplierId } = {}) {
@@ -59,7 +48,6 @@ async function executarLote(config, { date, diasAntes, supplierId } = {}) {
         descricao: ag.description,
         data,
         horario,
-        incluirDescricao: config.incluirDescricao,
       });
       const response = await enviarMaisChat(payload);
       const ok = response?.data?.status !== false;
@@ -81,9 +69,8 @@ async function executarLote(config, { date, diasAntes, supplierId } = {}) {
     }
   }
 
-  // Sincroniza contatos na MaisChat só para confirmação (lembrete já tem o contato).
   const contatos = { criados: 0, atualizados: 0, jaExistiam: 0, falhas: 0, detalhes: [] };
-  if (config.tipo === "confirmacao" && enviados.length > 0) {
+  if (enviados.length > 0) {
     const vistos = new Set();
     for (const e of enviados) {
       if (!e.patient_name) continue;
@@ -122,4 +109,4 @@ async function executarLote(config, { date, diasAntes, supplierId } = {}) {
   };
 }
 
-module.exports = { LOTE_CONFIRMACAO, LOTE_LEMBRETE, executarLote };
+module.exports = { LOTE_CONFIRMACAO, executarLote };

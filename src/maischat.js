@@ -12,19 +12,16 @@ async function enviarMaisChat(body) {
   );
 }
 
-/**
- * Monta o payload do template.
- *  - incluirDescricao=true  → 4 vars: {nome, descricao, data, horario}  (confirmação)
- *  - incluirDescricao=false → 3 vars: {nome, data, horario}             (lembrete)
- */
+// Monta o payload do template de confirmação (4 vars: nome, descricao, data, horario).
 function montarPayloadTemplate({
   template, destination, nomePaciente, descricao, data, horario,
-  incluirDescricao = true,
 }) {
-  const parameters = [{ type: "text", text: nomePaciente || "Paciente" }];
-  if (incluirDescricao) parameters.push({ type: "text", text: descricao || "Consulta/Exame" });
-  parameters.push({ type: "text", text: data || "??" });
-  parameters.push({ type: "text", text: horario || "??" });
+  const parameters = [
+    { type: "text", text: nomePaciente || "Paciente" },
+    { type: "text", text: descricao || "Consulta/Exame" },
+    { type: "text", text: data || "??" },
+    { type: "text", text: horario || "??" },
+  ];
 
   return {
     type: "apiTemplate",
@@ -39,11 +36,6 @@ function montarPayloadTemplate({
       components: [{ type: "body", parameters }],
     },
   };
-}
-
-// Detecta se o template recebido é de lembrete (3 vars) ou confirmação (4 vars).
-function templateIncluiDescricao(template) {
-  return template !== maischat.templateLembrete;
 }
 
 // O endpoint /contact da MaisChat exige número brasileiro sem DDI (10 dígitos para fixo, 11 para celular).
@@ -143,6 +135,5 @@ async function criarContato({ nome, celular }) {
 module.exports = {
   enviarMaisChat,
   montarPayloadTemplate,
-  templateIncluiDescricao,
   criarContato,
 };

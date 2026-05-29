@@ -4,7 +4,7 @@ const { cache: cacheCfg } = require("../config");
 const { dataRelativaISO } = require("./utils");
 
 // Persiste em arquivo { "tipo:dataAlvo": [codeAgendamento, ...] }.
-// Tipo separa "confirmacao" e "lembrete" — um agendamento pode receber ambos.
+// Atualmente só existe o tipo "confirmacao".
 const CACHE_LOTE_PATH = process.env.CACHE_LOTE_PATH || path.join(__dirname, "..", "cache-lote.json");
 
 function lerCacheLote() {
@@ -49,7 +49,7 @@ function marcarEnviadoNoLote(tipo, date, code) {
  * de QUALQUER data presente no cache. Útil para descobrir quais agendamentos da família
  * receberam template recentemente.
  *
- * @param {string[] | null} tipos - ex: ["confirmacao", "lembrete"]. null = todos.
+ * @param {string[] | null} tipos - ex: ["confirmacao"]. null = todos.
  */
 function codesNoCache(tipos = null) {
   const cache = lerCacheLote();
