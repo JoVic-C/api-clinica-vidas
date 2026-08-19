@@ -21,7 +21,7 @@ module.exports = {
     appId: process.env.MAISCHAT_APP_ID,
     source: process.env.MAISCHAT_SOURCE,
     metaToken: process.env.MAISCHAT_META_TOKEN,
-    templateConfirmacao: process.env.MAISCHAT_TEMPLATE_NAME || "confirma_agendamento",
+    templateConfirmacao: process.env.MAISCHAT_TEMPLATE_NAME || "confirmar_agendamento_6",
     templateLang: process.env.MAISCHAT_TEMPLATE_LANGUAGE || "pt_BR",
     defaultCountryCode: process.env.MAISCHAT_DEFAULT_COUNTRY_CODE || "55",
   },
