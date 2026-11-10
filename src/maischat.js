@@ -3,7 +3,7 @@ const { maischat } = require("../config");
 
 async function enviarMaisChat(body) {
   return axios.post(
-    `${maischat.baseUrl}/template/send/${maischat.broker}`,
+    `https://api.maischat.io/v3/template/send/${maischat.broker}`,
     body,
     {
       timeout: maischat.timeoutMs,
@@ -49,7 +49,7 @@ function normalizarCelularParaContato(celular) {
 async function buscarContatoPorCelular(celular) {
   try {
     const resp = await axios.get(
-      `${maischat.baseUrl}/contact/cellphone/${encodeURIComponent(celular)}`,
+      `https://api.maischat.io/v3/contact/cellphone/${encodeURIComponent(celular)}`,
       {
         timeout: maischat.timeoutMs,
         headers: { authorization: `Bearer ${maischat.token}` },
